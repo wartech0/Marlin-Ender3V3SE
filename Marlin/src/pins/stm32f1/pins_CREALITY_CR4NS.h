@@ -46,23 +46,36 @@
 #endif
 #define BOARD_WEBSITE_URL      "www.creality.com"
 
-//
-// Servos
-//
-#ifndef SERVO0_PIN
-  #define SERVO0_PIN                        PC14
-#endif
+#define BOARD_NO_NATIVE_USB
 
-#ifndef Z_MIN_PROBE_PIN
-  #define Z_MIN_PROBE_PIN                   PC13  // BLTouch IN
+//
+// EEPROM
+//
+#define IIC_BL24CXX_EEPROM
+
+#if ENABLED(IIC_BL24CXX_EEPROM)
+  #define IIC_EEPROM_SDA                    PA7
+  #define IIC_EEPROM_SCL                    PA8
+  #define MARLIN_EEPROM_SIZE                0x800 //2kb
+#elif ENABLED(SDCARD_EEPROM_EMULATION)
+  #define MARLIN_EEPROM_SIZE                0x800 //2kb
 #endif
 
 //
 // Limit Switches
 //
-//#ifndef Z_STOP_PIN
-//  #define Z_STOP_PIN                      PA15  // else PA7
-//#endif
+#define X_STOP_PIN                          PA5
+#define Y_STOP_PIN                          PA6
+
+#if ENABLED(BLTOUCH)
+  #define Z_STOP_PIN                        PC14
+  #define SERVO0_PIN                        PC13
+#elif ENABLED(PROBE_TARE)
+  #define Z_STOP_PIN                        PC14
+  #define PROBE_TARE_PIN                    PC13
+#else
+  #define Z_STOP_PIN                        PA15
+#endif
 
 //
 // Filament Runout Sensor
@@ -71,65 +84,166 @@
   #define FIL_RUNOUT_PIN                    PC15  // "Pulled-high"
 #endif
 
+// HX711 corresponding clock interface, this GPIO port do not parallel capacitor,
+// And should be as short wire as possible (if too long, use shield wire).
+#define HX711_SCK_PIN                       PA4
+// HX711 corresponding data interface, this GPIO port should not parallel capacitor,
+// And should be as short as possible wire (if too long, use shield wire).
+#define HX711_SDO_PIN                       PC6
+
+#ifndef CHECK_24V_PIN
+  #define POWER_DETECTION_PIN               PB0   // Detect the ADC input pin of 24V power supply
+#endif
+
+//
+// Steppers
+//
+#ifndef X_STEP_PIN
+  #define X_STEP_PIN                        PC2
+#endif
+#ifndef X_DIR_PIN
+  #define X_DIR_PIN                         PB9
+#endif
+#define X_ENABLE_PIN                        PC3
+
+#ifndef Y_STEP_PIN
+  #define Y_STEP_PIN                        PB8
+#endif
+#ifndef Y_DIR_PIN
+  #define Y_DIR_PIN                         PB7
+#endif
+#define Y_ENABLE_PIN                        PC3
+
+#ifndef Z_STEP_PIN
+  #define Z_STEP_PIN                        PB6
+#endif
+#ifndef Z_DIR_PIN
+  #define Z_DIR_PIN                         PB5
+#endif
+#define Z_ENABLE_PIN                        PC3
+
+#ifndef E0_STEP_PIN
+  #define E0_STEP_PIN                       PB4
+#endif
+#ifndef E0_DIR_PIN
+  #define E0_DIR_PIN                        PB3
+#endif
+#define E0_ENABLE_PIN                       PC3
+
+#if HAS_TMC_UART
+
+  #define X_SERIAL_TX_PIN                     PB12
+  #define X_SERIAL_RX_PIN                     PB12
+
+  //#define Y_SERIAL_TX_PIN                   X_SERIAL_TX_PIN
+  //#define Y_SERIAL_RX_PIN                   X_SERIAL_RX_PIN
+  #define Y_SERIAL_TX_PIN                     PB13
+  #define Y_SERIAL_RX_PIN                     PB13
+
+  //#define Z_SERIAL_TX_PIN                   X_SERIAL_TX_PIN
+  //#define Z_SERIAL_RX_PIN                   X_SERIAL_RX_PIN
+  #define Z_SERIAL_TX_PIN                     PB14
+  #define Z_SERIAL_RX_PIN                     PB14
+
+  //#define E0_SERIAL_TX_PIN                  X_SERIAL_TX_PIN
+  //#define E0_SERIAL_RX_PIN                  X_SERIAL_RX_PIN
+  #define E0_SERIAL_TX_PIN                    PB15
+  #define E0_SERIAL_RX_PIN                    PB15
+
+  #define X_DIAG_PIN                          PB10
+  #define Y_DIAG_PIN                          PB11
+  //#define Z_DIAG_PIN                        PB14
+  //#define E0_DIAG_PIN                       PB15
+
+  // Reduce baud rate to improve software serial reliability
+  #define TMC_BAUD_RATE                       19200 // 9600
+#endif
+
+#define DISABLE_DEBUG
+
+// Temperature Sensors
+//
+#define TEMP_0_PIN                          PC5   // TH1
+#define TEMP_BED_PIN                        PC4   // TB1
+
 //
 // Heaters / Fans
 //
+#define HEATER_0_PIN                        PA1   // HEATER1
 #define HEATER_BED_PIN                      PB2   // HOT BED
-#define FAN1_PIN                            PC1   // extruder fan
-//#define FAN2_PIN                          PB1   // Controller fan FET
 
-//
-// Auto fans
-//
-//#ifndef CONTROLLER_FAN_PIN
-//  #define CONTROLLER_FAN_PIN          FAN2_PIN
-//#endif
-
-#if HAS_TMC_UART
-  // Reduce baud rate to improve software serial reliability
-  #define TMC_BAUD_RATE 19200
-
-  // Software serial
-  #define X_SERIAL_TX_PIN                   PB12
-  #define X_SERIAL_RX_PIN        X_SERIAL_TX_PIN
-
-  #define Y_SERIAL_TX_PIN                   PB13
-  #define Y_SERIAL_RX_PIN        Y_SERIAL_TX_PIN
-
-  #define Z_SERIAL_TX_PIN                   PB14
-  #define Z_SERIAL_RX_PIN        Z_SERIAL_TX_PIN
-
-#endif // HAS_TMC_UART
-
-#if ANY(RET6_12864_LCD, HAS_DWIN_E3V2, IS_DWIN_MARLINUI)
-
-  /**
-   *    LCD PIN OUT
-   *        ------
-   *    NC | 1  2 | NC
-   *    RX | 3  4 | TX
-   *    EN   5  6 | BEEP
-   *     B | 7  8 | A
-   *   GND | 9 10 | +5V
-   *        ------
-   */
-  #define EXP3_01_PIN                       -1
-  #define EXP3_02_PIN                       -1
-  #define EXP3_03_PIN                       PA2
-  #define EXP3_04_PIN                       PA3
-  #define EXP3_05_PIN                       PB1
-  #define EXP3_06_PIN                       -1
-  #define EXP3_07_PIN                       PA12
-  #define EXP3_08_PIN                       PA11
-
-  #ifndef BEEPER_PIN
-    #define BEEPER_PIN               EXP1_06_PIN  // BEEP
-  #endif
-
-  #define BTN_ENC                    EXP1_05_PIN  // EN
-  #define BTN_EN1                    EXP1_08_PIN  // A
-  #define BTN_EN2                    EXP1_07_PIN  // B
-
+#ifndef FAN_PIN
+  #define FAN0_PIN                           PA0   // FAN
+#endif
+#if PIN_EXISTS(FAN)
+  #define FAN_SOFT_PWM
 #endif
 
-#include "pins_CREALITY_V4.h"
+//
+// SD Card
+//
+#define SD_DETECT_PIN                    PC7
+#define SDCARD_CONNECTION                ONBOARD
+#define ONBOARD_SPI_DEVICE               1
+#define ONBOARD_SD_CS_PIN                PA4   // SDSS
+#define ONBOARD_SDIO
+#define NO_SD_HOST_DRIVE                       // This board's SD is only seen by the printer
+
+#if ENABLED(CR10_STOCKDISPLAY) && NONE(RET6_12864_LCD, VET6_12864_LCD)
+  #error "Define RET6_12864_LCD or VET6_12864_LCD to select pins for CR10_STOCKDISPLAY with the Creality V4 controller."
+#endif
+
+#if ENABLED(RET6_12864_LCD)
+
+  // RET6 12864 LCD
+  #define LCD_PINS_RS                       PB12
+  #define LCD_PINS_ENABLE                   PB15
+  #define LCD_PINS_D4                       PB13
+
+  #define BTN_ENC                           PB2
+  #define BTN_EN1                           PB10
+  #define BTN_EN2                           PB14
+
+  #ifndef HAS_PIN_27_BOARD
+    #define BEEPER_PIN                      PC6
+  #endif
+
+#elif ENABLED(VET6_12864_LCD)
+
+  // VET6 12864 LCD
+  #define LCD_PINS_RS                       PA4
+  //#define LCD_PINS_ENABLE                 PA7
+  #define LCD_PINS_D4                       PA5
+
+  #define BTN_ENC                           PC5
+  #define BTN_EN1                           PB10
+  #define BTN_EN2                           PA6
+
+#elif ENABLED(DWIN_CREALITY_LCD)
+
+  // RET6 DWIN ENCODER LCD
+  #define BTN_ENC                           PB1
+  #define BTN_EN1                           PA11
+  #define BTN_EN2                           PA12
+
+  // //#define LCD_LED_PIN                     PB2
+  // // #if ENABLED(SPEAKER)
+  //   #define BEEPER_PIN                      PB13
+  // //   #undef SPEAKER
+  // // #endif
+ 
+ #ifndef BEEPER_PIN
+    #define BEEPER_PIN                     PB0//PB13
+    #undef SPEAKER
+  #endif
+  
+#elif ENABLED(DWIN_VET6_CREALITY_LCD)
+
+  // VET6 DWIN ENCODER LCD
+  #define BTN_ENC                           PA6
+  //#define BTN_EN1                         PA7
+  #define BTN_EN2                           PA4
+
+  #define BEEPER_PIN                        PA5
+
+#endif
